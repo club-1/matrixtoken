@@ -5,12 +5,12 @@ The Client-Server [Matrix] protocol allows to limit registrations based on
 [tokens], [Synapse] (and other Matrix servers) [support] this feature and
 have an admin API to [manage] these tokens.
 
-matrixtoken is a tool that alows users of the system to generate Matrix
-registration tokens from the homeserver admin API, without beeing admins
+matrixtoken is a tool that allows users of the system to generate Matrix
+registration tokens from the homeserver admin API, without being admins
 themselves.
 
 It is supposed to be used with the SUID mode to allow it to read its config
-file that contains the admin's access token.
+file containing the admin's access token.
 
 After it has been installed and configured, users can simply run:
 
@@ -22,5 +22,5 @@ date (by default 1 use and 30 days of validity).
 [Matrix]: https://matrix.org/
 [tokens]: https://spec.matrix.org/unstable/client-server-api/#token-authenticated-registration
 [Synapse]: https://github.com/element-hq/synapse/
-[supporte]: https://element-hq.github.io/synapse/latest/usage/configuration/config_documentation.html#registration_requires_token
+[support]: https://element-hq.github.io/synapse/latest/usage/configuration/config_documentation.html#registration_requires_token
 [manage]: https://element-hq.github.io/synapse/latest/usage/administration/admin_api/registration_tokens.html
