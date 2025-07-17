@@ -109,7 +109,7 @@ func sendRequest(method, path string, content any) (*http.Response, error) {
 func generate() error {
 	body := Token{
 		UsesAllowed: conf.UsesAllowed,
-		ExpiryTime: time.Now().AddDate(0, 0, conf.ExpiryDays).UnixMilli(),
+		ExpiryTime:  time.Now().AddDate(0, 0, conf.ExpiryDays).UnixMilli(),
 	}
 	response, err := sendRequest(http.MethodPost, conf.ServerSoftware.RouteNewToken(), body)
 	if err != nil {
