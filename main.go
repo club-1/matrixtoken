@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -90,19 +91,28 @@ type Token struct {
 	ExpiryTime  int64  `json:"expiry_time,omitempty"`
 }
 
-func sendRequest(method, path string, content any) (*http.Response, error) {
+func newRequest(method, path string, body io.Reader) (*http.Request, error) {
+	url := strings.TrimSuffix(conf.ServerBaseURL, "/") + path
+	request, err := http.NewRequest(method, url, body)
+	if err != nil {
+		return nil, err
+	}
+	request.Header.Set("Authorization", "Bearer "+conf.AdminToken)
+	return request, nil
+}
+
+func post(path string, content any) (*http.Response, error) {
 	buf := &bytes.Buffer{}
 	encoder := json.NewEncoder(buf)
 	if err := encoder.Encode(&content); err != nil {
 		return nil, fmt.Errorf("encode request body: %w", err)
 	}
 
-	url := strings.TrimSuffix(conf.ServerBaseURL, "/") + path
-	request, err := http.NewRequest(method, url, buf)
+	request, err := newRequest(http.MethodPost, path, buf)
 	if err != nil {
 		return nil, fmt.Errorf("create request: %w", err)
 	}
-	request.Header.Set("Authorization", "Bearer "+conf.AdminToken)
+	request.Header.Set("Content-Type", "application/json")
 	return http.DefaultClient.Do(request)
 }
 
@@ -111,7 +121,7 @@ func generate() error {
 		UsesAllowed: conf.UsesAllowed,
 		ExpiryTime:  time.Now().AddDate(0, 0, conf.ExpiryDays).UnixMilli(),
 	}
-	response, err := sendRequest(http.MethodPost, conf.ServerSoftware.RouteNewToken(), body)
+	response, err := post(conf.ServerSoftware.RouteNewToken(), body)
 	if err != nil {
 		return fmt.Errorf("post request: %w", err)
 	}
