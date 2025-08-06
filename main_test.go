@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -124,5 +125,47 @@ ExpiryDays = 15
 	if actual != expected {
 		t.Errorf("expected: %q, got: %q", expected, actual)
 	}
+}
 
+func TestUnixSocket(t *testing.T) {
+	tmp := t.TempDir()
+	socketPath := tmp + "/synapse_admin.sock"
+	expected := "testtoken"
+
+	listener, err := net.Listen("unix", socketPath)
+	if err != nil {
+		t.Fatal("unexpected error: ", err)
+	}
+	defer listener.Close()
+	server := http.Server{
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			token := Token{
+				Token: expected,
+			}
+			if err := json.NewEncoder(w).Encode(&token); err != nil {
+				t.Error("encode response: ", err)
+			}
+		}),
+	}
+	go server.Serve(listener)
+	defer server.Close()
+
+	config := fmt.Sprintf(`
+AdminToken = "syt_AjfVef2_L33JNpafeif_0feKJfeaf0CQpoZk"
+ServerBaseURL = "http+unix://%s"
+ServerSoftware = "synapse"
+UsesAllowed = 3
+ExpiryDays = 15
+`, socketPath)
+
+	stdout := setup(t, config)
+	main()
+	buf, err := io.ReadAll(stdout)
+	if err != nil {
+		t.Error("error reading stdout: ", err)
+	}
+	actual := string(bytes.TrimSpace(buf))
+	if actual != expected {
+		t.Errorf("expected: %q, got: %q", expected, actual)
+	}
 }

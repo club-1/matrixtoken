@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -83,6 +84,32 @@ var version = "unknown"
 
 var l *log.Logger = log.New(os.Stderr, "", 0)
 
+// UnixTransport is an [http.RoundTripper] that can handle URLs of the form
+// http+unix or https+unix, and that connects to a server using UNIX sockets.
+type UnixTransport struct {
+	t http.Transport
+}
+
+func NewUnixTransport(path string) *UnixTransport {
+	return &UnixTransport{http.Transport{
+		Dial: func(_, _ string) (net.Conn, error) {
+			return net.Dial("unix", path)
+		},
+	}}
+}
+
+func (t *UnixTransport) RoundTrip(req *http.Request) (res *http.Response, err error) {
+	scheme, _, ok := strings.Cut(req.URL.Scheme, "+")
+	if !ok {
+		return nil, fmt.Errorf(`scheme does not contain "+": %q`, req.URL.Scheme)
+	}
+	req.URL.Scheme = scheme
+	req.URL.Host = "localhost"
+	return t.t.RoundTrip(req)
+}
+
+// Token is the structure used for the bodies of both the request and the
+// response of the admin API of Matrix servers.
 type Token struct {
 	Token       string `json:"token,omitempty"`
 	UsesAllowed int    `json:"uses_allowed,omitempty"`
@@ -113,7 +140,23 @@ func post(path string, content any) (*http.Response, error) {
 		return nil, fmt.Errorf("create request: %w", err)
 	}
 	request.Header.Set("Content-Type", "application/json")
-	return http.DefaultClient.Do(request)
+
+	var transport http.RoundTripper
+	scheme, path, ok := strings.Cut(conf.ServerBaseURL, "://")
+	if !ok {
+		return nil, fmt.Errorf("base URL %q: scheme not found", conf.ServerBaseURL)
+	}
+	switch scheme {
+	case "http+unix", "https+unix":
+		t := &http.Transport{}
+		t.RegisterProtocol(scheme, NewUnixTransport(path))
+		transport = t
+	default:
+		transport = http.DefaultTransport
+	}
+
+	client := &http.Client{Transport: transport}
+	return client.Do(request)
 }
 
 func generate() error {
