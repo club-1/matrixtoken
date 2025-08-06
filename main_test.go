@@ -62,9 +62,16 @@ func setup(t *testing.T, config string) (stdout *os.File) {
 }
 
 func TestMain(t *testing.T) {
+	adminToken := "syt_AjfVef2_L33JNpafeif_0feKJfeaf0CQpoZk"
 	expected := "testtoken"
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// TODO: check the authorization header
+
+		auth := r.Header.Get("Authorization")
+		expectedAuth := "Bearer " + adminToken
+		if auth != expectedAuth {
+			t.Errorf("expected Authorization header %q, got %q", expectedAuth, auth)
+		}
+
 		// TODO: check the path of the request
 		// TODO: check the body of the request
 		// TODO: check the options of the request token
@@ -78,12 +85,15 @@ func TestMain(t *testing.T) {
 	defer server.Close()
 
 	config := fmt.Sprintf(`
-AdminToken = "syt_AjfVef2_L33JNpafeif_0feKJfeaf0CQpoZk"
+AdminToken = %q
 ServerBaseURL = %q
 ServerSoftware = "dendrite"
 UsesAllowed = 3
 ExpiryDays = 15
-`, server.URL)
+`,
+		adminToken,
+		server.URL,
+	)
 
 	stdout := setup(t, config)
 	main()
