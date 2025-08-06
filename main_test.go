@@ -27,6 +27,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func setup(t *testing.T, config string) (stdout *os.File) {
@@ -78,12 +79,24 @@ func TestMain(t *testing.T) {
 			t.Errorf("expected path %q, got %q", expectedPath, path)
 		}
 
-		// TODO: check the body of the request
-		// TODO: check the options of the request token
-		token := Token{
+		var token Token
+		if err := json.NewDecoder(r.Body).Decode(&token); err != nil {
+			t.Error("unexpected error decoding body: ", err)
+		}
+		expectedUses := 3
+		if token.UsesAllowed != expectedUses {
+			t.Errorf("expected UsesAllowed %d, got %d", expectedUses, token.UsesAllowed)
+		}
+		expectedDate := time.Now().AddDate(0, 0, 15)
+		date := time.UnixMilli(token.ExpiryTime)
+		if expectedDate.Sub(date).Abs().Minutes() > 1 {
+			t.Errorf("expected ExpiryTime around 1 minute of %v, got %v", expectedDate, date)
+		}
+
+		token = Token{
 			Token: expected,
 		}
-		if err := json.NewEncoder(w).Encode(token); err != nil {
+		if err := json.NewEncoder(w).Encode(&token); err != nil {
 			t.Error("encode response: ", err)
 		}
 	}))
