@@ -72,7 +72,12 @@ func TestMain(t *testing.T) {
 			t.Errorf("expected Authorization header %q, got %q", expectedAuth, auth)
 		}
 
-		// TODO: check the path of the request
+		path := r.URL.Path
+		expectedPath := "/_synapse/admin/v1/registration_tokens/new"
+		if path != expectedPath {
+			t.Errorf("expected path %q, got %q", expectedPath, path)
+		}
+
 		// TODO: check the body of the request
 		// TODO: check the options of the request token
 		token := Token{
@@ -87,7 +92,7 @@ func TestMain(t *testing.T) {
 	config := fmt.Sprintf(`
 AdminToken = %q
 ServerBaseURL = %q
-ServerSoftware = "dendrite"
+ServerSoftware = "synapse"
 UsesAllowed = 3
 ExpiryDays = 15
 `,
