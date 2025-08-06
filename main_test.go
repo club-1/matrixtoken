@@ -89,7 +89,8 @@ func TestMain(t *testing.T) {
 		}
 		expectedDate := time.Now().AddDate(0, 0, 15)
 		date := time.UnixMilli(token.ExpiryTime)
-		if expectedDate.Sub(date).Abs().Minutes() > 1 {
+		minutes := expectedDate.Sub(date).Minutes()
+		if minutes > 1 || minutes < -1 {
 			t.Errorf("expected ExpiryTime around 1 minute of %v, got %v", expectedDate, date)
 		}
 
