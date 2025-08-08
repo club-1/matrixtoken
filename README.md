@@ -9,10 +9,11 @@ have an admin API to [manage] these tokens.
 
 matrixtoken is a tool that allows users of the system to generate Matrix
 registration tokens from the homeserver admin API, without being admins
-themselves.
+themselves. 
 
-It is supposed to be used with the SUID mode to allow it to read its config
-file containing the admin's access token.
+It is supposed to be used with the [SUID] mode to allow it to read its config
+file containing the admin's access token. See the [example configuration file]
+for all the available options.
 
 After it has been installed and configured, users can simply run:
 
@@ -26,6 +27,8 @@ date (by default 1 use and 30 days of validity).
 [Synapse]: https://github.com/element-hq/synapse/
 [support]: https://element-hq.github.io/synapse/latest/usage/configuration/config_documentation.html#registration_requires_token
 [manage]: https://element-hq.github.io/synapse/latest/usage/administration/admin_api/registration_tokens.html
+[SUID]: https://en.wikipedia.org/wiki/Setuid
+[example configuration file]: matrixtoken.conf
 
 [build-svg]: https://github.com/club-1/matrixtoken/actions/workflows/build.yml/badge.svg
 [build-url]: https://github.com/club-1/matrixtoken/actions/workflows/build.yml
