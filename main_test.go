@@ -63,6 +63,14 @@ func setup(t *testing.T, config string) (stdout *os.File) {
 	return stdout
 }
 
+func mustReadAll(t *testing.T, r io.Reader) []byte {
+	buf, err := io.ReadAll(r)
+	if err != nil {
+		t.Fatal("error reading all: ", err)
+	}
+	return buf
+}
+
 func TestMain(t *testing.T) {
 	adminToken := "syt_AjfVef2_L33JNpafeif_0feKJfeaf0CQpoZk"
 	expected := "testtoken"
@@ -117,10 +125,7 @@ ExpiryDays = 15
 
 	stdout := setup(t, config)
 	main()
-	buf, err := io.ReadAll(stdout)
-	if err != nil {
-		t.Error("error reading stdout: ", err)
-	}
+	buf := mustReadAll(t, stdout)
 	actual := string(bytes.TrimSpace(buf))
 	if actual != expected {
 		t.Errorf("expected: %q, got: %q", expected, actual)
@@ -160,12 +165,30 @@ ExpiryDays = 15
 
 	stdout := setup(t, config)
 	main()
-	buf, err := io.ReadAll(stdout)
-	if err != nil {
-		t.Error("error reading stdout: ", err)
-	}
+	buf := mustReadAll(t, stdout)
 	actual := string(bytes.TrimSpace(buf))
 	if actual != expected {
 		t.Errorf("expected: %q, got: %q", expected, actual)
+	}
+}
+
+func TestHelp(t *testing.T) {
+	stdout := setup(t, "")
+	os.Args = append(os.Args, "--help")
+	expected := []byte("Usage: matrixtoken [OPTION]...")
+	main()
+	buf := mustReadAll(t, stdout)
+	if !bytes.Contains(buf, expected) {
+		t.Errorf("expected stdout to conatin: %s\ngot:\n%s", expected, buf)
+	}
+}
+
+func TestVersion(t *testing.T) {
+	stdout := setup(t, "")
+	os.Args = append(os.Args, "--version")
+	main()
+	buf := mustReadAll(t, stdout)
+	if !bytes.Contains(buf, []byte(version)) {
+		t.Errorf("expected stdout to contain: %s\ngot:\n%s", version, buf)
 	}
 }

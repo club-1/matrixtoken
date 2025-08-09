@@ -217,12 +217,12 @@ func main() {
 	if flagHelp {
 		cli.SetOutput(os.Stdout)
 		cli.Usage()
-		os.Exit(0)
+		return
 	}
 
 	if flagVersion {
 		fmt.Println("matrixtoken", version)
-		os.Exit(0)
+		return
 	}
 
 	conffile, err := os.Open(flagConf)
