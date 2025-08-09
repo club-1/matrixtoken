@@ -6,6 +6,3 @@ Nicolas Peugnet <nicolas@club1.fr>
 
 [REPORTING BUGS]
 Use the issue tracker at <https://github.com/club-1/matrixtoken>.
-
-[SEE ALSO]
-sendmail(8), opendmarc(8)
