@@ -27,6 +27,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -169,6 +170,75 @@ ExpiryDays = 15
 	actual := string(bytes.TrimSpace(buf))
 	if actual != expected {
 		t.Errorf("expected: %q, got: %q", expected, actual)
+	}
+}
+
+func TestGenerateErrors(t *testing.T) {
+	var cases = []struct {
+		name   string
+		url    string
+		status int
+		res    string
+		err    string
+	}{
+		{
+			name: "invalid port",
+			url:  "http://localhost:100000/",
+			err:  "post request: ",
+		},
+		{
+			name: "missing scheme",
+			url:  "localhost:8008",
+			err:  `post request: base URL "localhost:8008": scheme not found`,
+		},
+		{
+			name: "invalid url syntax",
+			url:  "http://invalid\\url/",
+			err:  "post request: create request: ",
+		},
+		{
+			name:   "error status",
+			status: 502,
+			err:    "response status: 502",
+		},
+		{
+			name:   "empty response",
+			status: 200,
+			res:    "",
+			err:    "decode response: EOF",
+		},
+		{
+			name:   "invalid json response",
+			status: 200,
+			res:    "[]",
+			err:    "decode response: json: ",
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			prev := conf
+			t.Cleanup(func() { conf = prev })
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(c.status)
+				w.Write([]byte(c.res))
+			}))
+			defer server.Close()
+
+			if c.url != "" {
+				conf.ServerBaseURL = c.url
+			} else {
+				conf.ServerBaseURL = server.URL
+			}
+
+			err := generate()
+
+			if err == nil {
+				t.Fatal("expected an error, got nil")
+			}
+			if !strings.HasPrefix(err.Error(), c.err) {
+				t.Errorf("expected prefix:\n%s\ngot:\n%v", c.err, err)
+			}
+		})
 	}
 }
 
