@@ -77,6 +77,12 @@ func TestMain(t *testing.T) {
 	expected := "testtoken"
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
+		agent := r.Header.Get("User-Agent")
+		expectedAgent := "matrixtoken/" + version
+		if agent != expectedAgent {
+			t.Errorf("expected User-Agent header %q, got %q", expectedAgent, agent)
+		}
+
 		auth := r.Header.Get("Authorization")
 		expectedAuth := "Bearer " + adminToken
 		if auth != expectedAuth {

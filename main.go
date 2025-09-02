@@ -124,6 +124,7 @@ func newRequest(method, path string, body io.Reader) (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
+	request.Header.Set("User-Agent", "matrixtoken/"+version)
 	request.Header.Set("Authorization", "Bearer "+conf.AdminToken)
 	return request, nil
 }
