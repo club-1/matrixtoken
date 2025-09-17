@@ -9,12 +9,16 @@ matrixtoken: go.mod go.sum *.go
 matrixtoken.1: $(BIN) matrixtoken.h2m
 	help2man --include=matrixtoken.h2m --no-info --section=1 $(BIN) -o $@
 
-check:
+check: lint test
+
+lint:
 	! gofmt -s -d . | grep ''
 	go vet ./...
+
+test:
 	go test -cover ./...
 
 clean:
 	rm -f matrixtoken matrixtoken.1
 
-.PHONY: all check clean
+.PHONY: all check lint test clean
