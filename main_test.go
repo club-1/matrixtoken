@@ -248,6 +248,38 @@ func TestGenerateErrors(t *testing.T) {
 	}
 }
 
+func TestList(t *testing.T) {
+	config := `
+UsesAllowed = 3
+ExpiryDays = 15
+`
+	stdout := setup(t, config)
+	os.Args = append(os.Args, "-l")
+	expected := bytes.TrimSpace([]byte(`
+UsesAllowed = 3
+ExpiryDays = 15
+`))
+	main()
+	buf := bytes.TrimSpace(mustReadAll(t, stdout))
+	if !bytes.Equal(buf, expected) {
+		t.Errorf("expected stdout to be:\n%s\ngot:\n%s", expected, buf)
+	}
+}
+
+func TestListDefaults(t *testing.T) {
+	stdout := setup(t, "")
+	os.Args = append(os.Args, "-l")
+	expected := bytes.TrimSpace([]byte(`
+UsesAllowed = 1
+ExpiryDays = 30
+`))
+	main()
+	buf := bytes.TrimSpace(mustReadAll(t, stdout))
+	if !bytes.Equal(buf, expected) {
+		t.Errorf("expected stdout to be:\n%s\ngot:\n%s", expected, buf)
+	}
+}
+
 func TestHelp(t *testing.T) {
 	stdout := setup(t, "")
 	os.Args = append(os.Args, "--help")
@@ -255,7 +287,7 @@ func TestHelp(t *testing.T) {
 	main()
 	buf := mustReadAll(t, stdout)
 	if !bytes.Contains(buf, expected) {
-		t.Errorf("expected stdout to conatin: %s\ngot:\n%s", expected, buf)
+		t.Errorf("expected stdout to contain: %s\ngot:\n%s", expected, buf)
 	}
 }
 

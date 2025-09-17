@@ -63,20 +63,26 @@ func (s *Software) RouteNewToken() string {
 	}
 }
 
+type TokenConf struct {
+	UsesAllowed int
+	ExpiryDays  int
+}
+
 type Conf struct {
 	AdminToken     string
 	ServerBaseURL  string
 	ServerSoftware Software
-	UsesAllowed    int
-	ExpiryDays     int
+	TokenConf
 }
 
 // Default values
 var conf = Conf{
 	ServerBaseURL:  "http://localhost:8008/",
 	ServerSoftware: softwareSynapse,
-	UsesAllowed:    1,
-	ExpiryDays:     30,
+	TokenConf: TokenConf{
+		UsesAllowed: 1,
+		ExpiryDays:  30,
+	},
 }
 
 // Set by the compiler
@@ -194,6 +200,7 @@ the homeserver admin API.
 Options:
   -c FILE       Read config from FILE. (default %q)
   -h, --help    Show this help and exit.
+  -l            List token related config values.
   --version     Show version and exit.
 `
 	flagConfDef = "/etc/matrixtoken.conf"
@@ -207,11 +214,13 @@ func main() {
 	var (
 		flagConf    string
 		flagHelp    bool
+		flagList    bool
 		flagVersion bool
 	)
 	cli.StringVar(&flagConf, "c", flagConfDef, "")
 	cli.BoolVar(&flagHelp, "h", false, "")
 	cli.BoolVar(&flagHelp, "help", false, "")
+	cli.BoolVar(&flagList, "l", false, "")
 	cli.BoolVar(&flagVersion, "version", false, "")
 	cli.Parse(os.Args[1:])
 
@@ -233,6 +242,14 @@ func main() {
 	decoder := toml.NewDecoder(conffile)
 	if _, err := decoder.Decode(&conf); err != nil {
 		l.Fatalf("Failed to parse conf file %s: %v", flagConf, err)
+	}
+
+	if flagList {
+		encoder := toml.NewEncoder(os.Stdout)
+		if err := encoder.Encode(&conf.TokenConf); err != nil {
+			l.Fatal("Failed to list token config: ", err)
+		}
+		return
 	}
 
 	if err := generate(); err != nil {
