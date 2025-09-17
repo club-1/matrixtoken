@@ -139,6 +139,23 @@ ExpiryDays = 15
 	}
 }
 
+func TestJSON(t *testing.T) {
+	expected := `{"token":"ZsaQ","uses_allowed":1,"expiry_time":1760729693138}`
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(expected))
+	}))
+	config := fmt.Sprintf("ServerBaseURL = %q", server.URL)
+	defer server.Close()
+	stdout := setup(t, config)
+	os.Args = append(os.Args, "--json")
+	main()
+	buf := mustReadAll(t, stdout)
+	actual := string(bytes.TrimSpace(buf))
+	if actual != expected {
+		t.Errorf("expected: %q, got: %q", expected, actual)
+	}
+}
+
 func TestUnixSocket(t *testing.T) {
 	tmp := t.TempDir()
 	socketPath := tmp + "/synapse_admin.sock"
@@ -236,7 +253,7 @@ func TestGenerateErrors(t *testing.T) {
 				conf.ServerBaseURL = server.URL
 			}
 
-			err := generate()
+			err := generate(false)
 
 			if err == nil {
 				t.Fatal("expected an error, got nil")

@@ -160,7 +160,7 @@ func post(path string, content any) (*http.Response, error) {
 	return client.Do(request)
 }
 
-func generate() error {
+func generate(fmtJSON bool) error {
 	body := Token{
 		UsesAllowed: conf.UsesAllowed,
 		ExpiryTime:  time.Now().AddDate(0, 0, conf.ExpiryDays).UnixMilli(),
@@ -181,7 +181,14 @@ func generate() error {
 		return fmt.Errorf("decode response: %w", err)
 	}
 
-	fmt.Println(token.Token)
+	if fmtJSON {
+		encoder := json.NewEncoder(os.Stdout)
+		if err := encoder.Encode(&token); err != nil {
+			return fmt.Errorf("encode JSON: %w", err)
+		}
+	} else {
+		fmt.Println(token.Token)
+	}
 	return nil
 }
 
@@ -194,6 +201,7 @@ the homeserver admin API.
 Options:
   -c FILE       Read config from FILE. (default %q)
   -h, --help    Show this help and exit.
+  -j, --json    Output results in JSON format.
   --version     Show version and exit.
 `
 	flagConfDef = "/etc/matrixtoken.conf"
@@ -207,11 +215,14 @@ func main() {
 	var (
 		flagConf    string
 		flagHelp    bool
+		flagJSON    bool
 		flagVersion bool
 	)
 	cli.StringVar(&flagConf, "c", flagConfDef, "")
 	cli.BoolVar(&flagHelp, "h", false, "")
 	cli.BoolVar(&flagHelp, "help", false, "")
+	cli.BoolVar(&flagJSON, "j", false, "")
+	cli.BoolVar(&flagJSON, "json", false, "")
 	cli.BoolVar(&flagVersion, "version", false, "")
 	cli.Parse(os.Args[1:])
 
@@ -235,7 +246,7 @@ func main() {
 		l.Fatalf("Failed to parse conf file %s: %v", flagConf, err)
 	}
 
-	if err := generate(); err != nil {
+	if err := generate(flagJSON); err != nil {
 		l.Fatal("Failed to generate token: ", err)
 	}
 }
