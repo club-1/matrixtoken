@@ -19,6 +19,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -31,6 +32,7 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/number571/go-rfc1751"
 )
 
 type Software string
@@ -63,12 +65,44 @@ func (s *Software) RouteNewToken() string {
 	}
 }
 
+type Style string
+
+const (
+	styleServer  Style = "server"
+	styleRFC1751 Style = "rfc1751"
+)
+
+func (s *Style) UnmarshalText(text []byte) error {
+	switch Style(text) {
+	case styleServer:
+		*s = styleServer
+	case styleRFC1751:
+		*s = styleRFC1751
+	default:
+		return fmt.Errorf("unknown style: %s", text)
+	}
+	return nil
+}
+
+func (s *Style) Generate(bits uint64) string {
+	switch *s {
+	case styleServer:
+		return ""
+	case styleRFC1751:
+		token, _ := gorfc1751.NewMnemonic(rand.Reader, bits)
+		return strings.ToLower(strings.ReplaceAll(token, " ", "-"))
+	default:
+		panic("unknown style: " + string(*s))
+	}
+}
+
 type Conf struct {
 	AdminToken     string
 	ServerBaseURL  string
 	ServerSoftware Software
 	UsesAllowed    int
 	ExpiryDays     int
+	TokenStyle     Style
 }
 
 // Default values
@@ -77,6 +111,7 @@ var conf = Conf{
 	ServerSoftware: softwareSynapse,
 	UsesAllowed:    1,
 	ExpiryDays:     30,
+	TokenStyle:     styleServer,
 }
 
 // Set by the compiler
@@ -162,6 +197,7 @@ func post(path string, content any) (*http.Response, error) {
 
 func generate(fmtJSON bool) error {
 	body := Token{
+		Token:       conf.TokenStyle.Generate(64),
 		UsesAllowed: conf.UsesAllowed,
 		ExpiryTime:  time.Now().AddDate(0, 0, conf.ExpiryDays).UnixMilli(),
 	}

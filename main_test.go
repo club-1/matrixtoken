@@ -27,6 +27,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -137,6 +138,54 @@ ExpiryDays = 15
 	if actual != expected {
 		t.Errorf("expected: %q, got: %q", expected, actual)
 	}
+}
+
+type TestRequestsCase struct {
+	name          string
+	config        string
+	expectedToken string
+}
+
+func TestRequests(t *testing.T) {
+	cases := []TestRequestsCase{
+		{
+			name:          "style server",
+			config:        `TokenStyle = "server"`,
+			expectedToken: `^$`,
+		},
+		{
+			name:          "style rfc1751",
+			config:        `TokenStyle = "rfc1751"`,
+			expectedToken: `^[a-z]+-[a-z]+-[a-z]+-[a-z]+-[a-z]+-[a-z]+$`,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			subTestRequests(t, tc)
+		})
+	}
+}
+
+func subTestRequests(t *testing.T, tc TestRequestsCase) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var token Token
+		if err := json.NewDecoder(r.Body).Decode(&token); err != nil {
+			t.Error("unexpected error decoding body: ", err)
+		}
+		if tc.expectedToken != "" {
+			ok, _ := regexp.MatchString(tc.expectedToken, token.Token)
+			if !ok {
+				t.Errorf("expected token to match %q, got %q", tc.expectedToken, token.Token)
+			}
+		}
+		if err := json.NewEncoder(w).Encode(&token); err != nil {
+			t.Error("encode response: ", err)
+		}
+	}))
+	config := fmt.Sprintf("ServerBaseURL = %q\n"+tc.config, server.URL)
+	defer server.Close()
+	setup(t, config)
+	main()
 }
 
 func TestJSON(t *testing.T) {
