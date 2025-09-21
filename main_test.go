@@ -156,7 +156,7 @@ func TestRequests(t *testing.T) {
 		{
 			name:          "style rfc1751",
 			config:        `TokenStyle = "rfc1751"`,
-			expectedToken: `^[a-z]+-[a-z]+-[a-z]+-[a-z]+-[a-z]+-[a-z]+$`,
+			expectedToken: "^cave-lawn-bold-vail-low-many$",
 		},
 	}
 	for _, tc := range cases {
@@ -167,6 +167,9 @@ func TestRequests(t *testing.T) {
 }
 
 func subTestRequests(t *testing.T, tc TestRequestsCase) {
+	prevRandReader := randReader
+	randReader = bytes.NewBuffer([]byte("dummyrandreader"))
+	t.Cleanup(func() { randReader = prevRandReader })
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var token Token
 		if err := json.NewDecoder(r.Body).Decode(&token); err != nil {

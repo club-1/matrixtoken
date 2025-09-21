@@ -64,6 +64,8 @@ func (s *Software) RouteNewToken() string {
 	}
 }
 
+var randReader io.Reader = rand.Reader
+
 type Style string
 
 const (
@@ -87,7 +89,7 @@ func (s *Style) Generate(bits uint64) string {
 	case styleServer:
 		return ""
 	case styleRFC1751:
-		token, _ := gorfc1751.NewMnemonic(rand.Reader, bits)
+		token, _ := gorfc1751.NewMnemonic(randReader, bits)
 		return strings.ToLower(strings.ReplaceAll(token, " ", "-"))
 	default:
 		panic("unknown style: " + string(*s))
