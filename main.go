@@ -141,7 +141,7 @@ var conf = Conf{
 // Set by the compiler
 var version = "unknown"
 
-var l *log.Logger = log.New(os.Stderr, "", 0)
+var l *log.Logger = log.New(os.Stderr, "matrixtoken: ", 0)
 
 // UnixTransport is an [http.RoundTripper] that can handle URLs of the form
 // http+unix or https+unix, and that connects to a server using UNIX sockets.
@@ -299,14 +299,14 @@ func main() {
 
 	conffile, err := os.Open(flagConf)
 	if err != nil {
-		l.Fatal("Failed to open conf file: ", err)
+		l.Fatal("failed to open conf file: ", err)
 	}
 	decoder := toml.NewDecoder(conffile)
 	if _, err := decoder.Decode(&conf); err != nil {
-		l.Fatalf("Failed to parse conf file %s: %v", flagConf, err)
+		l.Fatalf("failed to parse conf file %s: %v", flagConf, err)
 	}
 
 	if err := generate(flagJSON); err != nil {
-		l.Fatal("Failed to generate token: ", err)
+		l.Fatal("failed to generate token: ", err)
 	}
 }
