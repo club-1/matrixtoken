@@ -93,12 +93,6 @@ func TestMain(t *testing.T) {
 			t.Errorf("expected Authorization header %q, got %q", expectedAuth, auth)
 		}
 
-		path := r.URL.Path
-		expectedPath := "/_synapse/admin/v1/registration_tokens/new"
-		if path != expectedPath {
-			t.Errorf("expected path %q, got %q", expectedPath, path)
-		}
-
 		var token Token
 		if err := json.NewDecoder(r.Body).Decode(&token); err != nil {
 			t.Error("unexpected error decoding body: ", err)
@@ -146,11 +140,22 @@ ExpiryDays = 15
 type TestRequestsCase struct {
 	name          string
 	config        string
+	expectedPath  string
 	expectedToken string
 }
 
 func TestRequests(t *testing.T) {
 	cases := []TestRequestsCase{
+		{
+			name:         "software synapse",
+			config:       `ServerSoftware = "synapse"`,
+			expectedPath: "/_synapse/admin/v1/registration_tokens/new",
+		},
+		{
+			name:         "software dendrite",
+			config:       `ServerSoftware = "dendrite"`,
+			expectedPath: "/_dendrite/admin/registrationTokens/new",
+		},
 		{
 			name:          "style server",
 			config:        `TokenStyle = "server"`,
@@ -184,6 +189,9 @@ func subTestRequests(t *testing.T, tc TestRequestsCase) {
 	randReader = bytes.NewBuffer([]byte("dummyrandreader"))
 	t.Cleanup(func() { randReader = prevRandReader })
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if tc.expectedPath != "" && r.URL.Path != tc.expectedPath {
+			t.Errorf("expected path %q, got %q", tc.expectedPath, r.URL.Path)
+		}
 		var token Token
 		if err := json.NewDecoder(r.Body).Decode(&token); err != nil {
 			t.Error("unexpected error decoding body: ", err)
