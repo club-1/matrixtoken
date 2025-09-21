@@ -67,9 +67,20 @@ func (s *Software) RouteNewToken() string {
 
 const (
 	alphabetZBase32 = "ybndrfg8ejkmcpqxot1uwisza345h769"
+	alphabetBase58  = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 )
 
 var randReader io.Reader = rand.Reader
+
+func generateBasex(bits uint64, alphabet string) string {
+	buf := make([]byte, bits>>3)
+	randReader.Read(buf)
+	encoder, err := basex.NewEncoding(alphabet)
+	if err != nil {
+		panic(err)
+	}
+	return encoder.Encode(buf)
+}
 
 type Style string
 
@@ -77,6 +88,7 @@ const (
 	styleServer  Style = "server"
 	styleRFC1751 Style = "rfc1751"
 	styleZBase32 Style = "z-base-32"
+	styleBase58  Style = "base58"
 )
 
 func (s *Style) UnmarshalText(text []byte) error {
@@ -85,6 +97,7 @@ func (s *Style) UnmarshalText(text []byte) error {
 	case styleServer:
 	case styleRFC1751:
 	case styleZBase32:
+	case styleBase58:
 	default:
 		return fmt.Errorf("unknown style: %s", text)
 	}
@@ -99,10 +112,9 @@ func (s *Style) Generate(bits uint64) string {
 		token, _ := gorfc1751.NewMnemonic(randReader, bits)
 		return strings.ToLower(strings.ReplaceAll(token, " ", "-"))
 	case styleZBase32:
-		buf := make([]byte, bits>>3)
-		randReader.Read(buf)
-		encoder, _ := basex.NewEncoding(alphabetZBase32)
-		return encoder.Encode(buf)
+		return generateBasex(bits, alphabetZBase32)
+	case styleBase58:
+		return generateBasex(bits, alphabetBase58)
 	default:
 		panic("unknown style: " + string(*s))
 	}
