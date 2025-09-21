@@ -19,6 +19,7 @@ package main
 
 import (
 	"bytes"
+	"encoding"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -34,6 +35,7 @@ import (
 )
 
 func setup(t *testing.T, config string) (stdout *os.File) {
+	t.Helper()
 	tmp := t.TempDir()
 
 	// setup stdout
@@ -66,6 +68,7 @@ func setup(t *testing.T, config string) (stdout *os.File) {
 }
 
 func mustReadAll(t *testing.T, r io.Reader) []byte {
+	t.Helper()
 	buf, err := io.ReadAll(r)
 	if err != nil {
 		t.Fatal("error reading all: ", err)
@@ -325,6 +328,23 @@ func TestGenerateErrors(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestUnmarshalErrors(t *testing.T) {
+	test := func(t *testing.T, u encoding.TextUnmarshaler, v, expected string) {
+		err := u.UnmarshalText([]byte(v))
+		if err.Error() != expected {
+			t.Fatalf("expected %q, got %q", expected, err)
+		}
+	}
+	t.Run("software", func(t *testing.T) {
+		var s Software
+		test(t, &s, "invalid", "unknown software: invalid")
+	})
+	t.Run("style", func(t *testing.T) {
+		var s Style
+		test(t, &s, "invalid", "unknown style: invalid")
+	})
 }
 
 func TestHelp(t *testing.T) {
