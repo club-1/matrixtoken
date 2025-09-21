@@ -298,6 +298,12 @@ func TestGenerateErrors(t *testing.T) {
 			err:    "response status: 502",
 		},
 		{
+			name:   "matrix error",
+			status: 400,
+			res:    `{"errcode":"M_INVALID_PARAM","error":"Token already exists: 1234"}`,
+			err:    "response status: 400 Bad Request: Token already exists: 1234",
+		},
+		{
 			name:   "empty response",
 			status: 200,
 			res:    "",

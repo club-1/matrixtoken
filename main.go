@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -177,6 +178,12 @@ type Token struct {
 	ExpiryTime  int64  `json:"expiry_time,omitempty"`
 }
 
+// Error is the structure parsed from request errors.
+type Error struct {
+	Errcode string `json:"errcode"`
+	Error   string `json:"error"`
+}
+
 func newRequest(method, path string, body io.Reader) (*http.Request, error) {
 	url := strings.TrimSuffix(conf.ServerBaseURL, "/") + path
 	request, err := http.NewRequest(method, url, body)
@@ -232,7 +239,13 @@ func generate(fmtJSON bool) error {
 	defer response.Body.Close()
 
 	if response.StatusCode != 200 {
-		return fmt.Errorf("response status: %s", response.Status)
+		msg := fmt.Sprintf("response status: %s", response.Status)
+		decoder := json.NewDecoder(response.Body)
+		var errRes Error
+		if err := decoder.Decode(&errRes); err == nil {
+			msg = fmt.Sprintf("%s: %s", msg, errRes.Error)
+		}
+		return errors.New(msg)
 	}
 
 	var token Token
