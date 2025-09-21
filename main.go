@@ -43,11 +43,10 @@ const (
 )
 
 func (s *Software) UnmarshalText(text []byte) error {
-	switch Software(text) {
+	*s = Software(text)
+	switch *s {
 	case softwareDendrite:
-		*s = softwareDendrite
 	case softwareSynapse:
-		*s = softwareSynapse
 	default:
 		return fmt.Errorf("unknown software: %s", text)
 	}
@@ -73,11 +72,10 @@ const (
 )
 
 func (s *Style) UnmarshalText(text []byte) error {
-	switch Style(text) {
+	*s = Style(text)
+	switch *s {
 	case styleServer:
-		*s = styleServer
 	case styleRFC1751:
-		*s = styleRFC1751
 	default:
 		return fmt.Errorf("unknown style: %s", text)
 	}
