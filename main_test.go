@@ -158,6 +158,11 @@ func TestRequests(t *testing.T) {
 			config:        `TokenStyle = "rfc1751"`,
 			expectedToken: "^cave-lawn-bold-vail-low-many$",
 		},
+		{
+			name:          "style z-base-32",
+			config:        `TokenStyle = "z-base-32"`,
+			expectedToken: "^ge7mppihzramq$",
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

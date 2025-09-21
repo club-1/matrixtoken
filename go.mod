@@ -4,5 +4,6 @@ go 1.18
 
 require (
 	github.com/BurntSushi/toml v1.5.0
+	github.com/eknkc/basex v1.0.1
 	github.com/number571/go-rfc1751 v1.0.4
 )

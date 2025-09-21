@@ -32,6 +32,7 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/eknkc/basex"
 	"github.com/number571/go-rfc1751"
 )
 
@@ -64,6 +65,10 @@ func (s *Software) RouteNewToken() string {
 	}
 }
 
+const (
+	alphabetZBase32 = "ybndrfg8ejkmcpqxot1uwisza345h769"
+)
+
 var randReader io.Reader = rand.Reader
 
 type Style string
@@ -71,6 +76,7 @@ type Style string
 const (
 	styleServer  Style = "server"
 	styleRFC1751 Style = "rfc1751"
+	styleZBase32 Style = "z-base-32"
 )
 
 func (s *Style) UnmarshalText(text []byte) error {
@@ -78,6 +84,7 @@ func (s *Style) UnmarshalText(text []byte) error {
 	switch *s {
 	case styleServer:
 	case styleRFC1751:
+	case styleZBase32:
 	default:
 		return fmt.Errorf("unknown style: %s", text)
 	}
@@ -91,6 +98,11 @@ func (s *Style) Generate(bits uint64) string {
 	case styleRFC1751:
 		token, _ := gorfc1751.NewMnemonic(randReader, bits)
 		return strings.ToLower(strings.ReplaceAll(token, " ", "-"))
+	case styleZBase32:
+		buf := make([]byte, bits>>3)
+		randReader.Read(buf)
+		encoder, _ := basex.NewEncoding(alphabetZBase32)
+		return encoder.Encode(buf)
 	default:
 		panic("unknown style: " + string(*s))
 	}

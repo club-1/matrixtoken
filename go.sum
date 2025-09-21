@@ -1,4 +1,6 @@
 github.com/BurntSushi/toml v1.5.0 h1:W5quZX/G/csjUnuI8SUYlsHs9M38FC7znL0lIO+DvMg=
 github.com/BurntSushi/toml v1.5.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=
+github.com/eknkc/basex v1.0.1 h1:TcyAkqh4oJXgV3WYyL4KEfCMk9W8oJCpmx1bo+jVgKY=
+github.com/eknkc/basex v1.0.1/go.mod h1:k/F/exNEHFdbs3ZHuasoP2E7zeWwZblG84Y7Z59vQRo=
 github.com/number571/go-rfc1751 v1.0.4 h1:milwUVoBV7AcHj0xh0qUCjZSWbRCDGN6sRNncFZiQrY=
 github.com/number571/go-rfc1751 v1.0.4/go.mod h1:VKqqWx6zFXqKBlL/ZHYrQo77u8xQ04LuXunYQ50Hcnw=
